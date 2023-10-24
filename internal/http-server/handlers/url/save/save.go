@@ -1,9 +1,12 @@
 package save
 
 import (
+	"errors"
 	"net/http"
 	resp "url-shortener/internal/lib/api"
 	"url-shortener/internal/lib/logger/sl"
+	"url-shortener/internal/lib/random"
+	"url-shortener/internal/storage"
 
 	"log/slog"
 
@@ -63,7 +66,37 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			return
 		}
 
-		//alias := req.Alias
+		// TODO: case when generated alias already exists
+		alias := req.Alias
+		if alias == "" {
+			alias = random.NewRandomString(aliasLength)
+		}
 
+		id, err := urlSaver.SaveURL(req.URL, alias)
+		if errors.Is(err, storage.ErrUrlExists) {
+			msg := "url already exists"
+
+			log.Info(msg, slog.String("url", req.URL))
+
+			render.JSON(w, r, resp.Error(msg))
+
+			return
+		}
+		if err != nil {
+			msg := "failed to save url"
+
+			log.Error(msg, sl.Err(err))
+
+			render.JSON(w, r, resp.Error(msg))
+
+			return
+		}
+
+		log.Info("url saved", slog.Int64("id", id))
+
+		render.JSON(w, r, Response{
+			Response: resp.OK(),
+			Alias:    alias,
+		})
 	}
 }
