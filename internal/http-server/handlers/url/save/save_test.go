@@ -39,7 +39,7 @@ func TestSaveHandler(t *testing.T) {
 			name:      "Empty URL",
 			url:       "",
 			alias:     "some_alias",
-			respError: "field URL is a required field",
+			respError: "field URL is required",
 		},
 		{
 			name:      "Invalid URL",
@@ -51,7 +51,7 @@ func TestSaveHandler(t *testing.T) {
 			name:      "SaveURL Error",
 			alias:     "test_alias",
 			url:       "https://google.com",
-			respError: "failed to add url",
+			respError: "failed to save url",
 			mockError: errors.New("unexpected error"),
 		},
 	}
